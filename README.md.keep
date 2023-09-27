@@ -18,7 +18,7 @@ Those schemas should be converted to Java serializer code, before running the pr
 
 2. Create the Java serializers using the provided [CLC](clc) script in the project directory:
    ```
-   clc create-serializers.clc
+   clc script create-serializers.clc
    ```
 
 3. Open the project in an IDE and run the `org.example.Main` class.
