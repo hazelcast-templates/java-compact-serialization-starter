@@ -23,9 +23,8 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 
 public class Main {
-
     public static void main(String[] args) throws Exception {
-        ClientConfig config = ConfigLoader.loadConfig("{{ or .config "" }}");
+        ClientConfig config = ConfigLoader.loadConfig("compact-demo");
         config.getSerializationConfig().getCompactSerializationConfig().setSerializers(
                 new org.example.School.Serializer(),
                 new org.example.Classroom.Serializer(),
@@ -33,14 +32,67 @@ public class Main {
         );
         HazelcastInstance client = HazelcastClient.newHazelcastClient(config);
         System.out.println("Connection Successful!");
-
+​
+        createMapping(client.getSql());
+        createStudents(client);
+        fetchStudents(client.getSql());
+​
+        client.shutdown();
+    }
+​
+    private static void createMapping(SqlService sqlService) {
+        System.out.print("\nCleaning up the 'students' map...");
+        sqlService.execute("DROP MAPPING IF EXISTS students");
+        System.out.print("Cleanup...OK.");
+​
+        System.out.print("\nCreating mapping for students...");
+​
+        String mappingSql = ""
+                + "CREATE OR REPLACE MAPPING students("
+                + "     id INT EXTERNAL NAME \"__key.id\","
+                + "     name VARCHAR"
+                + ") TYPE IMap"
+                + " OPTIONS ("
+                + "     'keyFormat' = 'compact',"
+                + "     'keyCompactTypeName' = 'studentId',"
+                + "     'valueFormat' = 'compact',"
+                + "     'valueCompactTypeName' = 'student'"
+                + " )";
+​
+        try (SqlResult ignored = sqlService.execute(mappingSql)) {
+            System.out.print("OK.");
+        } catch (Exception ex) {
+            System.out.print("FAILED. " + ex.getMessage());
+        }
+    }
+​
+    private static void createStudents(HazelcastInstance client) {
         IMap<String, Student> students = client.getMap("students");
+        students.destroy();
         students.set("joe", new Student(1, "Joe Dalton"));
         students.set("william", new Student(2, "William Dalton"));
         students.set("jack", new Student(3, "Jack Dalton"));
         students.set("Averell", new Student(4, "Averell Dalton"));
         System.out.println("Added the students!");
-
-        client.shutdown();
+    }
+    private static void fetchStudents(SqlService sqlService) {
+​
+        System.out.print("\nFetching students via SQL...");
+​
+        try (SqlResult result = sqlService.execute(String.format("SELECT this FROM students WHERE name = '%s'", "Joe Dalton"))) {
+            System.out.print("OK.\n");
+            System.out.println("--Results of 'SELECT this FROM students'");
+​
+            System.out.printf("%4s | %15s |%n", "id", "name");
+            for (SqlRow row : result) {
+                Student s = row.getObject("this");
+                System.out.printf("%4s | %15s |%n",
+                        s.getId(),
+                        s.getName()
+                );
+            }
+        } catch (Exception ex) {
+            System.out.print("FAILED. " + ex.getMessage());
+        }
     }
 }

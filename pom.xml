@@ -44,7 +44,7 @@
                 <executions>
                     
                     <execution>
-                        <id>client-with-ssl</id>
+                        <id>main</id>
                         <goals>
                             <goal>java</goal>
                         </goals>
