@@ -24,7 +24,7 @@ import com.hazelcast.map.IMap;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        ClientConfig config = ConfigLoader.loadConfig("{{ .config or "" }}");
+        ClientConfig config = ConfigLoader.loadConfig("{{ or .config "" }}");
         config.getSerializationConfig().getCompactSerializationConfig().setSerializers(
                 new org.example.School.Serializer(),
                 new org.example.Classroom.Serializer(),
