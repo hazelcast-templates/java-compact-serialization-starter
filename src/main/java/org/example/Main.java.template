@@ -20,6 +20,9 @@ import clc.ConfigLoader;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.sql.SqlResult;
+import com.hazelcast.sql.SqlRow;
+import com.hazelcast.sql.SqlService;
 import com.hazelcast.map.IMap;
 
 public class Main {
@@ -32,21 +35,21 @@ public class Main {
         );
         HazelcastInstance client = HazelcastClient.newHazelcastClient(config);
         System.out.println("Connection Successful!");
-​
+
         createMapping(client.getSql());
         createStudents(client);
         fetchStudents(client.getSql());
-​
+
         client.shutdown();
     }
-​
+
     private static void createMapping(SqlService sqlService) {
         System.out.print("\nCleaning up the 'students' map...");
         sqlService.execute("DROP MAPPING IF EXISTS students");
         System.out.print("Cleanup...OK.");
-​
+
         System.out.print("\nCreating mapping for students...");
-​
+
         String mappingSql = ""
                 + "CREATE OR REPLACE MAPPING students("
                 + "     id INT EXTERNAL NAME \"__key.id\","
@@ -58,14 +61,14 @@ public class Main {
                 + "     'valueFormat' = 'compact',"
                 + "     'valueCompactTypeName' = 'student'"
                 + " )";
-​
+
         try (SqlResult ignored = sqlService.execute(mappingSql)) {
             System.out.print("OK.");
         } catch (Exception ex) {
             System.out.print("FAILED. " + ex.getMessage());
         }
     }
-​
+
     private static void createStudents(HazelcastInstance client) {
         IMap<String, Student> students = client.getMap("students");
         students.destroy();
@@ -76,13 +79,13 @@ public class Main {
         System.out.println("Added the students!");
     }
     private static void fetchStudents(SqlService sqlService) {
-​
+
         System.out.print("\nFetching students via SQL...");
-​
+
         try (SqlResult result = sqlService.execute(String.format("SELECT this FROM students WHERE name = '%s'", "Joe Dalton"))) {
             System.out.print("OK.\n");
             System.out.println("--Results of 'SELECT this FROM students'");
-​
+
             System.out.printf("%4s | %15s |%n", "id", "name");
             for (SqlRow row : result) {
                 Student s = row.getObject("this");
