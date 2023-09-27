@@ -1,0 +1,3 @@
+-- Creates the serializers from schemas.
+
+\serializer generate -l java ./src/schemas/school.yaml -o src/main/java/org/example

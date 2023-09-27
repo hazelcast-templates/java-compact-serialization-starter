@@ -1,0 +1,116 @@
+package clc;
+
+import com.hazelcast.client.config.ClientConfig;
+import com.hazelcast.config.SSLConfig;
+import com.hazelcast.internal.json.Json;
+import com.hazelcast.internal.json.JsonObject;
+import com.hazelcast.internal.json.JsonValue;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Properties;
+
+public class ConfigLoader {
+    public static final String ENV_CLC_CONFIG = "CLC_CONFIG";
+    public static final String ENV_CLC_HOME = "CLC_HOME";
+    public static final String DEFAULT_CONFIG_NAME = "default";
+    public static ClientConfig loadConfig() throws IOException {
+        String nameOrPath = System.getenv(ENV_CLC_CONFIG);
+        if (nameOrPath == null || nameOrPath.isEmpty()) {
+            nameOrPath = DEFAULT_CONFIG_NAME;
+        }
+        return loadConfig(nameOrPath);
+    }
+
+    public static ClientConfig loadConfig(String nameOrPath) throws IOException {
+        Path configPath = resolveConfigPath(nameOrPath);
+        Path configRoot = configPath.getParent();
+        String text = Files.readString(configPath);
+        JsonValue json = Json.parse(text);
+        if (!json.isObject()) {
+            throw new ConfigException(String.format("Invalid CLC configuration at: %s", configPath));
+        }
+        ClientConfig cfg = new ClientConfig();
+        JsonObject obj = json.asObject();
+        JsonObject cluster = getObject(obj, "cluster");
+        if (cluster != null) {
+            String clusterName = cluster.getString("name", "");
+            if (!clusterName.isEmpty()) {
+                cfg.setClusterName(clusterName);
+            }
+            boolean isViridian = false;
+            String token = cluster.getString("discovery-token", "");
+            if (!token.isEmpty()) {
+                cfg.getNetworkConfig().getCloudConfig()
+                        .setDiscoveryToken(token)
+                        .setEnabled(true);
+                isViridian = true;
+            }
+            if (isViridian) {
+                String apiBase = cluster.getString("api-base", "");
+                if (!apiBase.isEmpty()) {
+                    cfg.setProperty("hazelcast.client.cloud.url", apiBase);
+                }
+            } else {
+                String address = cluster.getString("address", "");
+                if (!address.isEmpty()) {
+                    cfg.getNetworkConfig().setAddresses(Collections.singletonList(address));
+                }
+            }
+        }
+        JsonObject ssl = getObject(obj, "ssl");
+        if (ssl != null) {
+            if (!ssl.isObject()) {
+                throw new ConfigException("ssl key must be an object");
+            }
+            String password = ssl.getString("key-password", "");
+            Properties props = new Properties();
+            props.setProperty("javax.net.ssl.keyStore", configRoot.resolve("client.keystore").toString());
+            props.setProperty("javax.net.ssl.trustStore", configRoot.resolve("client.truststore").toString());
+            props.setProperty("javax.net.ssl.keyStorePassword", password);
+            props.setProperty("javax.net.ssl.trustStorePassword", password);
+            cfg.getNetworkConfig().setSSLConfig(new SSLConfig().setEnabled(true).setProperties(props));
+        }
+        return cfg;
+    }
+
+    public static Path home() {
+        String home = System.getenv(ENV_CLC_HOME);
+        if (home != null && !home.isEmpty()) {
+            return Path.of(home);
+        }
+        String clcDir = ".hazelcast";
+        String os = System.getProperty("os.name");
+        if (os.startsWith("Windows")) {
+            clcDir = "AppData/Roaming/Hazelcast";
+        }
+        String userHome = System.getProperty("user.home");
+        return Path.of(userHome, "/", clcDir);
+   }
+
+   private static Path resolveConfigPath(String nameOrPath) {
+       if (nameOrPath == null || nameOrPath.isEmpty()) {
+           throw new IllegalArgumentException("nameOrPath must not be blank");
+       }
+       Path configPath = null;
+       if (nameOrPath.endsWith(".json")) {
+           configPath = Path.of(nameOrPath);
+       } else {
+           configPath = home().resolve("configs/" + nameOrPath + "/config.json");
+       }
+       return configPath;
+   }
+
+   private static JsonObject getObject(JsonObject obj, String key) {
+        JsonValue value = obj.get(key);
+        if (value == null) {
+            return null;
+        }
+        if (!value.isObject()) {
+            throw new ConfigException(String.format("'%s' key must be an object", key));
+        }
+        return value.asObject();
+   }
+}
