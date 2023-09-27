@@ -1,0 +1,24 @@
+# Java Compact Serialization Starter
+
+This project contains the code that creates a Hazelcast Java Client code that uses compact serialization.
+
+Check out our [documentation](https://docs.hazelcast.com/hazelcast/latest/serialization/compact-serialization#hide-nav) to learn more about Compact Serialization.
+
+It contains YAML schemas in the `src/schemas` folder.
+Those schemas should be converted to Java serializer code, before running the project.
+
+## Requirements
+
+* JDK 11
+* [CLC](https://docs.hazelcast.com/clc/latest/install-clc) v5.3.4 or later.
+
+## Usage
+
+1. Make sure CLC is installed.
+
+2. Create the Java serializers using the provided [CLC](clc) script in the project directory:
+   ```
+   clc create-serializers.clc
+   ```
+
+3. Open the project in an IDE and run the `org.example.Main` class.
