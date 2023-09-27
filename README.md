@@ -8,4 +8,6 @@ Check out our [documentation](https://docs.hazelcast.com/hazelcast/latest/serial
 
 Create the project using Hazelcast CLC
 
+```
 clc -c CONFIG-NAME project create java-compact-serialization-starter
+```
