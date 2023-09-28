@@ -1,3 +1,5 @@
 -- Creates the serializers from schemas.
+-- Run it as:
+--    clc create-serializers.clc
 
 \serializer generate -l java ./src/schemas/school.yaml -o src/main/java/org/example
