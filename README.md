@@ -1,4 +1,4 @@
-# Java Compact Serialization Starter Template
+# Hazelcast Java Compact Serialization Project Starter Template
 
 This template creates a Hazelcast Java Client code that uses compact serialization.
 
