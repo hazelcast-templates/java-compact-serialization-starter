@@ -1,8 +1,8 @@
 package org.example;
 
 public class Classroom {
-    private int id;
-    private Student[] students;
+    int id;
+    Student[] students;
 
     public Classroom(int id, Student[] students) {
         this.id = id;
