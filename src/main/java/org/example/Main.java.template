@@ -29,9 +29,9 @@ public class Main {
     public static void main(String[] args) throws Exception {
         ClientConfig config = ConfigLoader.loadConfig("{{ or .config "" }}");
         config.getSerializationConfig().getCompactSerializationConfig().setSerializers(
-                new org.example.School.Serializer(),
-                new org.example.Classroom.Serializer(),
-                new org.example.Student.Serializer()
+                new org.example.SchoolSerializer(),
+                new org.example.ClassroomSerializer(),
+                new org.example.StudentSerializer()
         );
         HazelcastInstance client = HazelcastClient.newHazelcastClient(config);
         System.out.println("Connection Successful!");
