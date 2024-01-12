@@ -25,13 +25,15 @@ import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
 import com.hazelcast.map.IMap;
 
+import org.example.domain.Student;
+
 public class Main {
     public static void main(String[] args) throws Exception {
         ClientConfig config = ConfigLoader.loadConfig("{{ or .config "" }}");
         config.getSerializationConfig().getCompactSerializationConfig().setSerializers(
-                new org.example.SchoolSerializer(),
-                new org.example.ClassroomSerializer(),
-                new org.example.StudentSerializer()
+                new org.example.serializers.SchoolSerializer(),
+                new org.example.serializers.ClassroomSerializer(),
+                new org.example.serializers.StudentSerializer()
         );
         HazelcastInstance client = HazelcastClient.newHazelcastClient(config);
         System.out.println("Connection Successful!");
