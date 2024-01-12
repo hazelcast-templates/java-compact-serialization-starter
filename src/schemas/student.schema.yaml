@@ -1,0 +1,9 @@
+serializer:
+  namespace: org.example.serializers
+classes:
+  - name: org.example.domain.Student
+    fields:
+      - name: id
+        type: int32
+      - name: name
+        type: string
