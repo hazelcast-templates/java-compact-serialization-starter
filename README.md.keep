@@ -10,7 +10,7 @@ Those schemas should be converted to Java serializer code, before running the pr
 ## Requirements
 
 * JDK 11
-* [CLC](https://docs.hazelcast.com/clc/latest/install-clc) v5.3.4 or later.
+* [CLC](https://docs.hazelcast.com/clc/latest/install-clc) v5.3.6 or later.
 
 ## Usage
 
@@ -18,7 +18,7 @@ Those schemas should be converted to Java serializer code, before running the pr
 
 2. Create the Java serializers using the provided [CLC](clc) script in the project directory:
    ```
-   clc script create-serializers.clc
+   clc script run create-serializers.clc
    ```
 
 3. Open the project in an IDE and run the `org.example.Main` class.
